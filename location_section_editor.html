@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Location Section Editor - Chongqing & Chengdu</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Font Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    /* Custom scrollbar for better aesthetics */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-slate-800 border-b border-slate-700/80 sticky top-0 z-20 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-indigo-600 rounded-lg text-white shadow-lg shadow-indigo-500/30">
+          <i data-lucide="map-pin" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white tracking-wide">Location Section Editor</h1>
+          <p class="text-xs text-slate-400">Chongqing & Chengdu Datasets (<span id="totalCount">0</span> locations)</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons Header -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button id="importBtn" class="px-3 py-1.5 text-xs sm:text-sm font-medium bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition-all duration-200 flex items-center gap-1.5 border border-slate-600">
+          <i data-lucide="upload" class="w-4 h-4"></i>
+          <span>Import JSON</span>
+        </button>
+        <button id="exportBtn" class="px-3 py-1.5 text-xs sm:text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-md shadow-emerald-900/20 transition-all duration-200 flex items-center gap-1.5">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span>Export JSON</span>
+        </button>
+        <button id="resetDataBtn" title="Reset to Original Data" class="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-700/50 rounded-lg transition-colors">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container (Split Layout) -->
+  <div class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col md:flex-row gap-6 overflow-hidden">
+    
+    <!-- Left Sidebar: Search, Filter & Location List -->
+    <aside class="w-full md:w-80 lg:w-96 flex flex-col bg-slate-800/80 border border-slate-700/60 rounded-xl overflow-hidden shadow-xl shrink-0 h-[600px] md:h-[calc(100vh-8rem)]">
+      
+      <!-- Top Filters -->
+      <div class="p-4 border-b border-slate-700/60 space-y-3 bg-slate-800/50">
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Explorer</span>
+          <button id="addNewBtn" class="px-2.5 py-1 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-md transition flex items-center gap-1 shadow-sm">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>Add New</span>
+          </button>
+        </div>
+
+        <!-- Search Input -->
+        <div class="relative">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
+          <input type="text" id="searchInput" placeholder="Search locations..." class="w-full bg-slate-900/80 border border-slate-700 rounded-lg pl-9 pr-8 py-1.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+          <button id="clearSearch" class="hidden absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-200">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Filter Dropdowns -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[10px] font-medium text-slate-400 uppercase mb-1">City</label>
+            <select id="cityFilter" class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="ALL">All Cities</option>
+              <option value="重庆">重庆 (Chongqing)</option>
+              <option value="成都">成都 (Chengdu)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[10px] font-medium text-slate-400 uppercase mb-1">Category</label>
+            <select id="categoryFilter" class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="ALL">All Categories</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location List -->
+      <div id="locationList" class="flex-1 overflow-y-auto p-3 space-y-2">
+        <!-- Rendered dynamically -->
+      </div>
+    </aside>
+
+    <!-- Right Main Panel: Comprehensive Location Form -->
+    <main class="flex-1 bg-slate-800/80 border border-slate-700/60 rounded-xl overflow-y-auto shadow-xl flex flex-col min-h-[600px] md:h-[calc(100vh-8rem)]">
+      
+      <!-- Form Header / Sticky Bar -->
+      <div class="px-6 py-4 border-b border-slate-700/60 bg-slate-800/90 sticky top-0 z-10 flex flex-wrap items-center justify-between gap-4 backdrop-blur-md">
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 id="formTitle" class="text-lg font-bold text-slate-100">Edit Location</h2>
+            <span id="badgeCity" class="px-2 py-0.5 text-xs rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-medium">重庆</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">ID: <span id="displayId" class="font-mono text-slate-300">N/A</span></p>
+        </div>
+
+        <!-- Form Quick Actions -->
+        <div class="flex items-center gap-2">
+          <button id="duplicateBtn" type="button" class="px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-700/80 hover:bg-slate-700 rounded-lg border border-slate-600 transition flex items-center gap-1.5">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            <span>Duplicate</span>
+          </button>
+          <button id="deleteBtn" type="button" class="px-3 py-1.5 text-xs font-medium text-rose-300 bg-rose-950/40 hover:bg-rose-900/60 rounded-lg border border-rose-800/50 transition flex items-center gap-1.5">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <span>Delete</span>
+          </button>
+          <button id="saveBtn" type="button" class="px-4 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-md shadow-indigo-900/40 transition flex items-center gap-1.5 ml-2">
+            <i data-lucide="save" class="w-3.5 h-3.5"></i>
+            <span id="saveBtnText">Save Location</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Location Form -->
+      <form id="locationForm" class="p-6 space-y-6 flex-1">
+        
+        <!-- Basic Info Section -->
+        <div class="space-y-4">
+          <h3 class="text-xs font-semibold text-indigo-400 uppercase tracking-wider border-b border-slate-700/50 pb-1.5">Basic Information</h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- ID (Read-only / Custom Identifier) -->
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1">Unique Identifier (ID) <span class="text-rose-400">*</span></label>
+              <input type="text" id="fieldId" required class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <!-- Name (名称) -->
+            <div class="md:col-span-2">
+              <label class="block text-xs font-medium text-slate-300 mb-1">Location Name (名称) <span class="text-rose-400">*</span></label>
+              <input type="text" id="fieldName" required placeholder="e.g. 洪崖洞民俗风貌区" class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- City (城市) -->
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1">City (城市) <span class="text-rose-400">*</span></label>
+              <div class="relative">
+                <input type="text" id="fieldCity" list="cityOptions" required placeholder="e.g. 重庆" class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <datalist id="cityOptions">
+                  <option value="重庆"></option>
+                  <option value="成都"></option>
+                </datalist>
+              </div>
+            </div>
+
+            <!-- Category (分类) -->
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1">Category (分类) <span class="text-rose-400">*</span></label>
+              <input type="text" id="fieldCategory" list="categoryOptions" required placeholder="Select or type..." class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <datalist id="categoryOptions">
+                <!-- Dynamically populated -->
+              </datalist>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metadata & Path Section -->
+        <div class="space-y-4">
+          <h3 class="text-xs font-semibold text-indigo-400 uppercase tracking-wider border-b border-slate-700/50 pb-1.5">Details & Assets</h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Folder / Image Path -->
+            <div class="md:col-span-2">
+              <label class="block text-xs font-medium text-slate-300 mb-1">Folder / Image Path (文件夹路径)</label>
+              <div class="flex items-center gap-2">
+                <span class="p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-400"><i data-lucide="folder" class="w-4 h-4"></i></span>
+                <input type="text" id="fieldFolder" placeholder="e.g. chongqing/hongyadong" class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+            </div>
+
+            <!-- Address (地址) -->
+            <div class="md:col-span-2">
+              <label class="block text-xs font-medium text-slate-300 mb-1">Address (地址)</label>
+              <input type="text" id="fieldAddress" placeholder="Detailed street address" class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <!-- Operation Time (营业时间) -->
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1">Operation Hours (营业时间)</label>
+              <input type="text" id="fieldOpTime" placeholder="e.g. 全天开放 or 09:00-22:00" class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <!-- Entrance Fee (门票) -->
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1">Entrance Fee (门票)</label>
+              <input type="text" id="fieldFee" placeholder="e.g. 免费 or ￥50" class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- Coordinates Section -->
+        <div class="space-y-4">
+          <h3 class="text-xs font-semibold text-indigo-400 uppercase tracking-wider border-b border-slate-700/50 pb-1.5">Geographic Coordinates</h3>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Latitude -->
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1">Latitude (纬度)</label>
+              <input type="number" step="any" id="fieldLat" placeholder="29.56301" class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <!-- Longitude -->
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1">Longitude (经度)</label>
+              <input type="number" step="any" id="fieldLng" placeholder="106.5788" class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- Description Section -->
+        <div class="space-y-4">
+          <h3 class="text-xs font-semibold text-indigo-400 uppercase tracking-wider border-b border-slate-700/50 pb-1.5">Description</h3>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Overview / Notes (描述)</label>
+            <textarea id="fieldDesc" rows="4" placeholder="Provide details about historical significance, travel tips, key features..." class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed"></textarea>
+          </div>
+        </div>
+      </form>
+    </main>
+  </div>
+
+  <!-- JSON Import Modal -->
+  <div id="importModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl max-w-lg w-full p-6 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+        <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+          <i data-lucide="upload" class="w-5 h-5 text-indigo-400"></i>
+          Import Location Dataset
+        </h3>
+        <button id="closeModal" class="text-slate-400 hover:text-slate-200">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <label class="block text-xs font-medium text-slate-300">Option 1: Paste JSON Payload</label>
+        <textarea id="importJsonTextarea" rows="6" placeholder='[ { "id": "loc_1", "name": "..." } ]' class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 font-mono text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+
+        <div class="relative flex py-1 items-center">
+          <div class="flex-grow border-t border-slate-700"></div>
+          <span class="flex-shrink mx-4 text-xs text-slate-500">OR</span>
+          <div class="flex-grow border-t border-slate-700"></div>
+        </div>
+
+        <label class="block text-xs font-medium text-slate-300">Option 2: Select JSON File</label>
+        <input type="file" id="importFileInput" accept=".json" class="block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-700 file:text-slate-200 hover:file:bg-slate-600">
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button id="cancelImport" class="px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-700 rounded-lg transition">Cancel</button>
+        <button id="confirmImport" class="px-4 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow transition">Import Locations</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Pre-loaded dataset script -->
+  <script>
+    const INITIAL_LOCATIONS = [
+      { id: "cq_01", name: "洪崖洞民俗风貌区", city: "重庆", category: "地标", folder: "chongqing/hongyadong", address: "重庆市渝中区嘉陵江滨江路88号", opTime: "全天开放 (吊脚楼灯光通常18:00-23:00)", fee: "免费", lat: 29.56301, lng: 106.5788, description: "最具代表性的重庆地标之一，具有浓厚的巴渝传统吊脚楼建筑特色。夜幕降临时灯火辉煌，宛如现实版的《千与千寻》。" },
+      { id: "cq_02", name: "解放碑步行街", city: "重庆", category: "商业街", folder: "chongqing/jiefangbei", address: "重庆市渝中区民族路", opTime: "全天开放", fee: "免费", lat: 29.5573, lng: 106.5771, description: "重庆的核心商圈与标志性纪念碑，周围高楼林立，集购物、餐饮、休闲与历史文化于一体。" },
+      { id: "cq_03", name: "长江索道", city: "重庆", category: "体验", folder: "chongqing/yangtze_ropeway", address: "重庆市渝中区新华路151号", opTime: "08:00-22:00", fee: "单程￥20，往返￥30", lat: 29.5585, lng: 106.5841, description: "被称为“空中公交”，飞渡长江之上，是极具重庆特色的交通体验与高空视角景观缆车。" },
+      { id: "cq_04", name: "李子坝轻轨穿楼", city: "重庆", category: "奇观", folder: "chongqing/liziba", address: "重庆市渝中区李子坝正街", opTime: "06:30-22:30 (列车运营时间)", fee: "免费 (观景台)", lat: 29.5528, lng: 106.5367, description: "重庆轨道交通2号线李子坝站，因轨道列车直接穿过居民楼而闻名中外的神奇景观。" },
+      { id: "cq_05", name: "磁器口古镇", city: "重庆", category: "古镇", folder: "chongqing/ciqikou", address: "重庆市沙坪坝区磁南街1号", opTime: "全天开放 (商家营业约09:00-21:30)", fee: "免费", lat: 29.5812, lng: 106.4497, description: "千年古镇，充满老重庆街巷风情与传统美食，如陈麻花、毛血旺等。" },
+      { id: "cq_06", name: "山城步道", city: "重庆", category: "步道", folder: "chongqing/shancheng_budao", address: "重庆市渝中区中兴路235号", opTime: "全天开放", fee: "免费", lat: 29.5501, lng: 106.5689, description: "依山而建的悬崖栈道与古老老老街区，可俯瞰长江风光，感受老重庆的独有烟火气息。" },
+      { id: "cq_07", name: "鹅岭二厂文创公园", city: "重庆", category: "文创区", folder: "chongqing/ering_testbed2", address: "重庆市渝中区鹅岭正街1号", opTime: "全天开放", fee: "免费", lat: 29.5518, lng: 106.5412, description: "由印制二厂旧厂房改造而成的工业风文艺街区，影视剧《从你的全世界路过》取景地。" },
+      { id: "cq_08", name: "弹子石老街", city: "重庆", category: "街区", folder: "chongqing/danzishi", address: "重庆市南岸区泰昌路69号", opTime: "全天开放", fee: "免费", lat: 29.5698, lng: 106.5889, description: "融汇中西建筑风情的百年老街，高低错落，是远眺两江交汇和朝天门的极佳视角。" },
+      { id: "cq_09", name: "四川美术学院 (黄桷坪校区)", city: "重庆", category: "艺术街", folder: "chongqing/scai_huangjueping", address: "重庆市九龙坡区黄桷坪正街108号", opTime: "08:30-18:00", fee: "免费", lat: 29.5089, lng: 106.5123, description: "拥有全球最大的涂鸦街区之一，艺术氛围浓厚，充满年轻活力与个性创意。" },
+      { id: "cq_10", name: "罗汉寺", city: "重庆", category: "寺庙", folder: "chongqing/luohan_temple", address: "重庆市渝中区罗汉寺街7号", opTime: "08:00-17:00", fee: "￥20", lat: 29.5599, lng: 106.5799, description: "隐于繁华闹市高楼中的千年古刹，因电影《疯狂的石头》在此取景而更受关注。" },
+      { id: "cq_11", name: "重庆中国三峡博物馆", city: "重庆", category: "博物馆", folder: "chongqing/three_gorges_museum", address: "重庆市渝中区人民路256号", opTime: "09:00-17:00 (周一闭馆)", fee: "免费 (需预约)", lat: 29.5641, lng: 106.5512, description: "展示巴渝文化、三峡历史与重庆城市发展的综合型国家一级博物馆。" },
+      { id: "cq_12", name: "重庆市人民大礼堂", city: "重庆", category: "地标", folder: "chongqing/peoples_auditorium", address: "重庆市渝中区人民路173号", opTime: "08:30-17:00", fee: "外观免费，内部参观￥10", lat: 29.5648, lng: 106.5529, description: "宏伟的中国传统宫殿式建筑，是重庆的标志性城市文化建筑之一。" },
+      { id: "cq_13", name: "南山一棵树观景台", city: "重庆", category: "观景台", folder: "chongqing/nanshan_yikeshu", address: "重庆市南岸区南山风景区内", opTime: "09:00-22:30", fee: "￥30", lat: 29.5412, lng: 106.5912, description: "俯瞰重庆渝中半岛全景及两江夜景的经典极佳观景位置。" },
+      { id: "cq_14", name: "来福士探索舱·云端乐园", city: "重庆", category: "地标", folder: "chongqing/raffles_city", address: "重庆市渝中区接圣街8号", opTime: "10:00-22:00", fee: "根据项目￥120-￥180不等", lat: 29.5611, lng: 106.5878, description: "位于朝天门来福士高空横向水晶连廊，提供云端步道与极高视角的两江景观。" },
+      { id: "cq_15", name: "白公馆", city: "重庆", category: "文化古迹", folder: "chongqing/baigongguan", address: "重庆市沙坪坝区壮志路", opTime: "09:00-17:00 (周一闭馆)", fee: "免费 (需预约)", lat: 29.5789, lng: 106.4211, description: "著名的红色革命教育基地，记录了近代深刻的历史记忆。" },
+      { id: "cq_16", name: "渣滓洞", city: "重庆", category: "文化古迹", folder: "chongqing/zhazidong", address: "重庆市沙坪坝区渣滓洞景区", opTime: "09:00-17:00 (周一闭馆)", fee: "免费 (需预约)", lat: 29.5852, lng: 106.4182, description: "革命历史旧址，与白公馆相邻，是重庆红色旅游的重要地点。" },
+      { id: "cq_17", name: "北仓文创街区", city: "重庆", category: "文创区", folder: "chongqing/beicang", address: "重庆市江北区观音桥建北一支路", opTime: "全天开放", fee: "免费", lat: 29.5782, lng: 106.5321, description: "由纺织厂旧仓库改造成的文艺街区，集独立书店、咖啡馆与生活美学馆于一体。" },
+      { id: "cq_18", name: "观音桥步行街", city: "重庆", category: "商业街", folder: "chongqing/guanyinqiao", address: "重庆市江北区观音桥", opTime: "全天开放", fee: "免费", lat: 29.5751, lng: 106.5310, description: "重庆繁华的商业中心之一，年轻时尚氛围浓厚，餐饮购物体验丰富。" },
+      { id: "cq_19", name: "交通茶馆", city: "重庆", category: "体验", folder: "chongqing/jiaotong_chaguan", address: "重庆市九龙坡区黄桷坪正街20号", opTime: "07:00-19:00", fee: "人均茶费￥10-￥20", lat: 29.5078, lng: 106.5118, description: "保持着70-80年代老重庆原始风貌的经典茶馆，斑驳木梁与盖碗茶香韵味十足。" },
+      { id: "cq_20", name: "武隆天生三桥 (重庆郊区)", city: "重庆", category: "自然风光", folder: "chongqing/wulong_tiansheng_sanqiao", address: "重庆市武隆区仙女山镇", opTime: "08:00-16:30", fee: "约￥125", lat: 29.4289, lng: 107.7892, description: "世界自然遗产，规模宏大的喀斯特天生石桥群，《满城尽带黄金甲》与《变形金刚4》取景地。" },
+      { id: "cq_21", name: "仙女山国家森林公园", city: "重庆", category: "自然风光", folder: "chongqing/xiannvshan", address: "重庆市武隆区仙女山镇", opTime: "08:30-17:00", fee: "￥50", lat: 29.4712, lng: 107.7212, description: "被称为“南国牧原”，拥有高山草原风光，四季景色宜人。" },
+      { id: "cq_22", name: "大足石刻 (宝顶山)", city: "重庆", category: "文化古迹", folder: "chongqing/dazu_rock_carvings", address: "重庆市大足区宝顶镇", opTime: "08:30-18:00", fee: "约￥115", lat: 29.7489, lng: 105.7989, description: "世界文化遗产，集石窟艺术精粹于一体，其中千手观音造像震撼人心。" },
+      { id: "cq_23", name: "九街", city: "重庆", category: "街区", folder: "chongqing/jiujie", address: "重庆市江北区北城天街", opTime: "晚间更佳 (全天开放)", fee: "免费", lat: 29.5801, lng: 106.5389, description: "重庆著名的夜生活核心街区，酒吧、潮牌店与夜宵美食聚集地。" },
+      { id: "cq_24", name: "重庆工业博物馆", city: "重庆", category: "博物馆", folder: "chongqing/industrial_museum", address: "重庆市大渡口区义渡路", opTime: "09:00-17:00 (周一闭馆)", fee: "免费 (需预约)", lat: 29.4891, lng: 106.4812, description: "利用重钢老厂房改造，展现重工业发展历程与重工美学的现代博物馆。" },
+      { id: "cq_25", name: "十八梯传统风貌区", city: "重庆", category: "古街", folder: "chongqing/shibati", address: "重庆市渝中区中兴路1号", opTime: "全天开放", fee: "免费", lat: 29.5521, lng: 106.5712, description: "连接上半城与下半城的经典老阶梯街区，经过更新重现传统巴渝风貌。" },
+      { id: "cq_26", name: "下浩里老街", city: "重庆", category: "古街", folder: "chongqing/xiahaoli", address: "重庆市南岸区南滨路", opTime: "全天开放", fee: "免费", lat: 29.5589, lng: 106.5899, description: "依山造势的传统吊脚楼群老街，融入了艺术展览与咖啡文创。" },
+      { id: "cq_27", name: "钟书阁 (重庆中英街店)", city: "重庆", category: "书店", folder: "chongqing/zhongshuge", address: "重庆市九龙坡区杨家坪中英3D Mall", opTime: "10:00-22:00", fee: "免费", lat: 29.5123, lng: 106.5101, description: "以阶梯错幻镜像空间为特色的魔幻书店，极富空间视觉吸引力。" },
+      { id: "cq_28", name: "金海湾公园", city: "重庆", category: "公园", folder: "chongqing/jinhaiwan_park", address: "重庆市渝北区大竹林", opTime: "全天开放", fee: "免费", lat: 29.6212, lng: 106.4912, description: "沿嘉陵江而建的生态公园，拥有白色灯塔与宽阔草坪，十分适合日落散步。" },
+      { id: "cq_29", name: "湖广会馆", city: "重庆", category: "文化古迹", folder: "chongqing/huguang_huiguan", address: "重庆市渝中区长滨路105号", opTime: "09:00-17:00", fee: "￥30", lat: 29.5562, lng: 106.5834, description: "清代移民文化的重要遗迹，具有精美的徽派与蜀地雕刻建筑细节。" },
+      { id: "cq_30", name: "龙门浩老街", city: "重庆", category: "古街", folder: "chongqing/longmenhao", address: "重庆市南岸区南滨路105号", opTime: "全天开放", fee: "免费", lat: 29.5541, lng: 106.5871, description: "开埠文化历史街区，青砖黛瓦，坐拥看东水门大桥与轨道列车过江的视觉窗口。" },
+
+      // 成都 Locations (30)
+      { id: "cd_01", name: "成都大熊猫繁育研究基地", city: "成都", category: "景点", folder: "chengdu/panda_base", address: "成都市成华区熊猫大道1375号", opTime: "07:30-18:00", fee: "￥55", lat: 30.7338, lng: 104.1458, description: "近距离观赏大熊猫和小熊猫的最佳去处，世界知名的大熊猫保护与繁育研究机构。" },
+      { id: "cd_02", name: "宽窄巷子", city: "成都", category: "古街", folder: "chengdu/kuanzhai_alley", address: "成都市青羊区长顺上街", opTime: "全天开放", fee: "免费", lat: 30.6648, lng: 104.0531, description: "由宽巷子、窄巷子和井巷子组成的清末民初四合院落古街区，体现老成都休闲风味。" },
+      { id: "cd_03", name: "锦里古街", city: "成都", category: "古街", folder: "chengdu/jinli", address: "成都市武侯区武侯祠大街231号", opTime: "全天开放", fee: "免费", lat: 30.6432, lng: 104.0512, description: "依托三国文化背景打造的古风商业街，民俗表演与成都小吃聚集地。" },
+      { id: "cd_04", name: "武侯祠", city: "成都", category: "文化古迹", folder: "chengdu/wuhou_shrine", address: "成都市武侯区武侯祠大街231号", opTime: "09:00-18:00", fee: "￥50", lat: 30.6428, lng: 104.0501, description: "中国唯一的君臣合祀祠堂，诸葛亮、刘备及蜀汉英雄的纪念地，著名的红墙竹影取景地。" },
+      { id: "cd_05", name: "杜甫草堂", city: "成都", category: "文化古迹", folder: "chengdu/dufu_thatched_cottage", address: "成都市青羊区青华路37号", opTime: "09:00-18:00", fee: "￥50", lat: 30.6601, lng: 104.0289, description: "唐代大诗人杜甫流寓成都时的故居，环境清幽古朴，富于诗情画意。" },
+      { id: "cd_06", name: "春熙路 / IFS爬墙熊猫", city: "成都", category: "商业街", folder: "chengdu/chunxi_road", address: "成都市锦江区春熙路", opTime: "全天开放", fee: "免费", lat: 30.6558, lng: 104.0811, description: "成都最繁华的时尚商业街区，IFS天台的巨大攀墙大熊猫装置是热门打卡地。" },
+      { id: "cd_07", name: "太古里", city: "成都", category: "商业街", folder: "chengdu/taikoo_li", address: "成都市锦江区中纱帽街8号", opTime: "10:00-22:00", fee: "免费", lat: 30.6542, lng: 104.0832, description: "融合古建筑与现代低密度开放式街区设计的时尚零售中心，紧邻大慈寺。" },
+      { id: "cd_08", name: "大慈寺", city: "成都", category: "寺庙", folder: "chengdu/daci_temple", address: "成都市锦江区大慈寺路23号", opTime: "08:00-17:00", fee: "免费", lat: 30.6551, lng: 104.0841, description: "历史悠久的千年古刹，位于闹市太古里之中，体现静谧与繁华的结合。" },
+      { id: "cd_09", name: "人民公园 (鹤鸣茶社)", city: "成都", category: "体验", folder: "chengdu/renmin_park", address: "成都市青羊区祠堂街87号", opTime: "06:30-22:00", fee: "公园免费，茶水约￥20-￥30", lat: 30.6582, lng: 104.0589, description: "体验成都慢节奏休闲生活的极佳场所，在百年老茶社掏耳朵、品盖碗茶。" },
+      { id: "cd_10", name: "文殊院", city: "成都", category: "寺庙", folder: "chengdu/wenshu_monastery", address: "成都市青羊区文殊院街66号", opTime: "08:00-17:00", fee: "免费", lat: 30.6748, lng: 104.0721, description: "川西著名佛教寺院，建筑古朴庄严，周边还有丰富的传统小吃。" },
+      { id: "cd_11", name: "九眼桥", city: "成都", category: "地标", folder: "chengdu/jiuyanqiao", address: "成都市锦江区九眼桥", opTime: "晚间氛围最佳", fee: "免费", lat: 30.6402, lng: 104.0898, description: "成都著名的夜景地标和酒吧街区，廊桥夜色迷人。" },
+      { id: "cd_12", name: "东郊记忆", city: "成都", category: "文创区", folder: "chengdu/eastern_suburb_memory", address: "成都市成华区建设南路188号", opTime: "全天开放", fee: "免费", lat: 30.6712, lng: 104.1218, description: "由成都红光电子管厂改建的音乐与工业文创园区，充满复古与现代艺术氛围。" },
+      { id: "cd_13", name: "青羊宫", city: "成都", category: "寺庙", folder: "chengdu/qingyang_palace", address: "成都市青羊区一环路西二段9号", opTime: "08:00-18:00", fee: "￥10", lat: 30.6569, lng: 104.0412, description: "川西第一道观，历史悠久，殿宇雄伟，内有著名的铜羊雕像。" },
+      { id: "cd_14", name: "金沙遗址博物馆", city: "成都", category: "博物馆", folder: "chengdu/jinsha_site_museum", address: "成都市青羊区金沙遗址路2号", opTime: "09:00-18:00 (周一闭馆)", fee: "￥70", lat: 30.6812, lng: 104.0112, description: "商周时期古蜀文化遗址博物馆，出土了中国文化遗产标志“太阳神鸟”金饰。" },
+      { id: "cd_15", name: "成都博物馆", city: "成都", category: "博物馆", folder: "chengdu/chengdu_museum", address: "成都市青羊区小河街1号 (天府广场旁)", opTime: "09:00-17:00 (周一闭馆)", fee: "免费 (需预约)", lat: 30.6571, lng: 104.0622, description: "全面展现成都历史文化、民俗风情与皮影艺术的大型现代博物馆。" },
+      { id: "cd_16", name: "天府广场", city: "成都", category: "广场", folder: "chengdu/tianfu_square", address: "成都市青羊区人民南路一段", opTime: "全天开放", fee: "免费", lat: 30.6568, lng: 104.0658, description: "成都市中心的核心广场，周边集聚城市图书馆、科技馆与博物馆。" },
+      { id: "cd_17", name: "望江楼公园", city: "成都", category: "公园", folder: "chengdu/wangjianglou_park", address: "成都市武侯区望江路30号", opTime: "06:00-21:00", fee: "开放区免费，文物区￥20", lat: 30.6312, lng: 104.0912, description: "纪念唐代女诗人薛涛的古迹公园，园内修竹荟萃，荟萃了上百种竹类。" },
+      { id: "cd_18", name: "玉林路 (小酒馆)", city: "成都", category: "街区", folder: "chengdu/yulin_road", address: "成都市武侯区玉林西路55号", opTime: "晚间更佳", fee: "免费", lat: 30.6289, lng: 104.0589, description: "因赵雷歌曲《成都》而红遍全国的街区，充满生活情调与小资酒吧文化。" },
+      { id: "cd_19", name: "天府艺术公园 (成都美术馆)", city: "成都", category: "艺术街", folder: "chengdu/tianfu_art_park", address: "成都市金牛区金牛坝路", opTime: "09:00-17:00 (周一闭馆)", fee: "免费 (需预约)", lat: 30.7112, lng: 104.0289, description: "水景与现代建筑完美结合的艺术公园，包含成都市美术馆与天府人文艺术图书馆。" },
+      { id: "cd_20", name: "安仁古镇 (大邑县)", city: "成都", category: "古镇", folder: "chengdu/anren_ancient_town", address: "成都市大邑县安仁镇", opTime: "全天开放", fee: "免费 (部分展馆收费)", lat: 30.5089, lng: 103.6212, description: "拥有大量保存完好的民国公馆建筑群与博物馆聚落，被誉为“中国博物馆小镇”。" },
+      { id: "cd_21", name: "黄龙溪古镇 (双流区)", city: "成都", category: "古镇", folder: "chengdu/huanglongxi", address: "成都市双流区黄龙溪镇", opTime: "全天开放", fee: "免费", lat: 30.3189, lng: 103.9712, description: "著名的川西水乡古镇，拥有千年历史，古榕树与水系环绕。" },
+      { id: "cd_22", name: "青城山 (都江堰)", city: "成都", category: "自然风光", folder: "chengdu/qingcheng_mountain", address: "成都市都江堰市青城山路", opTime: "08:00-17:00", fee: "前山￥80，后山￥20", lat: 30.8989, lng: 103.5712, description: "中国道教发源地之一，世界文化遗产，以“青城天下幽”的清幽自然景色闻名。" },
+      { id: "cd_23", name: "都江堰水利工程", city: "成都", category: "文化古迹", folder: "chengdu/dujiangyan_irrigation", address: "成都市都江堰市公园路", opTime: "08:00-17:30", fee: "￥80", lat: 31.0012, lng: 103.6189, description: "战国时期秦国蜀郡太守李冰父子率众修建的大型水利工程，至今仍发挥着巨大作用。" },
+      { id: "cd_24", name: "西村大院", city: "成都", category: "文创区", folder: "chengdu/xicun_dayuan", address: "成都市青羊区贝森北路1号", opTime: "全天开放", fee: "免费", lat: 30.6701, lng: 104.0189, description: "由著名建筑师家设计的竹林围合式运动文化集合体，拥有特色的屋顶跑道。" },
+      { id: "cd_25", name: "建设路美食街", city: "成都", category: "美食", folder: "chengdu/jianshe_road", address: "成都市成华区建设路", opTime: "11:00-23:00", fee: "免费", lat: 30.6721, lng: 104.1012, description: "成都年轻人极喜爱的夜市美食小吃聚集区，聚集了众多网红美食铺。" },
+      { id: "cd_26", name: "锦城湖公园 / 环球中心", city: "成都", category: "公园", folder: "chengdu/jincheng_lake", address: "成都市高新区益州大道", opTime: "全天开放", fee: "免费", lat: 30.5689, lng: 104.0589, description: "高新区现代绿道公园，毗邻单体建筑面积巨大的新世纪环球中心。" },
+      { id: "cd_27", name: "双子塔 (交子之环)", city: "成都", category: "地标", folder: "chengdu/financial_city_twin_towers", address: "成都市高新区交子大道", opTime: "灯光秀约19:30-22:00", fee: "免费", lat: 30.5812, lng: 104.0621, description: "成都高新区现代科技感的夜景地标，巨型双塔灯光秀与交子之环景观桥相呼应。" },
+      { id: "cd_28", name: "洛带古镇", city: "成都", category: "古镇", folder: "chengdu/luodai_ancient_town", address: "成都市龙泉驿区三元街", opTime: "全天开放", fee: "免费", lat: 30.6389, lng: 104.3212, description: "著名的客家古镇，保存有完好的客家会馆建筑，特色美食有伤心凉粉。" },
+      { id: "cd_29", name: "散花书院 (严家弯湾)", city: "成都", category: "书店", folder: "chengdu/sanhua_bookstore", address: "成都市青羊区草堂路", opTime: "09:30-21:00", fee: "免费", lat: 30.6589, lng: 104.0301, description: "充满了传统川西文化韵味的特色人文书店，静谧雅致。" },
+      { id: "cd_30", name: "四川省博物院", city: "成都", category: "博物馆", folder: "chengdu/sichuan_museum", address: "成都市青羊区浣花南路251号", opTime: "09:00-17:00 (周一闭馆)", fee: "免费 (需预约)", lat: 30.6521, lng: 104.0312, description: "西南地区最大的综合性博物馆之一，典藏张大千画作及古蜀青铜器珍品。" }
+    ];
+
+    // State management
+    let locations = [];
+    let currentSelectedId = null;
+    let isCreatingNew = false;
+
+    // DOM Elements
+    const locationListEl = document.getElementById('locationList');
+    const totalCountEl = document.getElementById('totalCount');
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearch');
+    const cityFilter = document.getElementById('cityFilter');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const categoryOptionsEl = document.getElementById('categoryOptions');
+    const addNewBtn = document.getElementById('addNewBtn');
+
+    // Form DOM Elements
+    const formTitle = document.getElementById('formTitle');
+    const badgeCity = document.getElementById('badgeCity');
+    const displayId = document.getElementById('displayId');
+    const saveBtn = document.getElementById('saveBtn');
+    const saveBtnText = document.getElementById('saveBtnText');
+    const duplicateBtn = document.getElementById('duplicateBtn');
+    const deleteBtn = document.getElementById('deleteBtn');
+
+    // Fields
+    const fieldId = document.getElementById('fieldId');
+    const fieldName = document.getElementById('fieldName');
+    const fieldCity = document.getElementById('fieldCity');
+    const fieldCategory = document.getElementById('fieldCategory');
+    const fieldFolder = document.getElementById('fieldFolder');
+    const fieldAddress = document.getElementById('fieldAddress');
+    const fieldOpTime = document.getElementById('fieldOpTime');
+    const fieldFee = document.getElementById('fieldFee');
+    const fieldLat = document.getElementById('fieldLat');
+    const fieldLng = document.getElementById('fieldLng');
+    const fieldDesc = document.getElementById('fieldDesc');
+
+    // Import Modal Elements
+    const importBtn = document.getElementById('importBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const resetDataBtn = document.getElementById('resetDataBtn');
+    const importModal = document.getElementById('importModal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelImport = document.getElementById('cancelImport');
+    const confirmImport = document.getElementById('confirmImport');
+    const importJsonTextarea = document.getElementById('importJsonTextarea');
+    const importFileInput = document.getElementById('importFileInput');
+
+    // Initialize application
+    function init() {
+      loadData();
+      populateCategoryFilters();
+      renderList();
+      if (locations.length > 0) {
+        selectLocation(locations[0].id);
+      } else {
+        startNewLocation();
+      }
+      lucide.createIcons();
+      setupEventListeners();
+    }
+
+    // Load from LocalStorage or Default
+    function loadData() {
+      const saved = localStorage.getItem('loc_editor_data');
+      if (saved) {
+        try {
+          locations = JSON.parse(saved);
+        } catch(e) {
+          console.error("Failed to parse stored locations", e);
+          locations = [...INITIAL_LOCATIONS];
+        }
+      } else {
+        locations = [...INITIAL_LOCATIONS];
+      }
+      totalCountEl.textContent = locations.length;
+    }
+
+    // Save to LocalStorage
+    function saveData() {
+      localStorage.setItem('loc_editor_data', JSON.stringify(locations, null, 2));
+      totalCountEl.textContent = locations.length;
+    }
+
+    // Populate category dropdown options dynamically based on existing data
+    function populateCategoryFilters() {
+      const categories = Array.from(new Set(locations.map(l => l.category).filter(Boolean))).sort();
+      
+      // Update filter dropdown
+      categoryFilter.innerHTML = '<option value="ALL">All Categories</option>';
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        categoryFilter.appendChild(opt);
+      });
+
+      // Update form datalist
+      categoryOptionsEl.innerHTML = '';
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        categoryOptionsEl.appendChild(opt);
+      });
+    }
+
+    // Render list based on filters
+    function renderList() {
+      const searchTerm = searchInput.value.trim().toLowerCase();
+      const cityVal = cityFilter.value;
+      const catVal = categoryFilter.value;
+
+      const filtered = locations.filter(loc => {
+        const matchesSearch = !searchTerm || 
+          loc.name.toLowerCase().includes(searchTerm) || 
+          loc.id.toLowerCase().includes(searchTerm) || 
+          (loc.address && loc.address.toLowerCase().includes(searchTerm));
+        const matchesCity = cityVal === 'ALL' || loc.city === cityVal;
+        const matchesCat = catVal === 'ALL' || loc.category === catVal;
+        return matchesSearch && matchesCity && matchesCat;
+      });
+
+      locationListEl.innerHTML = '';
+
+      if (filtered.length === 0) {
+        locationListEl.innerHTML = `
+          <div class="text-center py-12 px-4 text-slate-500">
+            <i data-lucide="map-pin-off" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+            <p class="text-sm font-medium">No locations match your search</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      filtered.forEach(loc => {
+        const isSelected = loc.id === currentSelectedId && !isCreatingNew;
+        const item = document.createElement('div');
+        item.className = `p-3 rounded-lg border transition cursor-pointer flex flex-col gap-1.5 ${
+          isSelected 
+            ? 'bg-indigo-600/20 border-indigo-500/60 text-slate-100 shadow-md' 
+            : 'bg-slate-900/40 border-slate-700/50 hover:bg-slate-700/40 text-slate-300'
+        }`;
+        
+        item.onclick = () => selectLocation(loc.id);
+
+        item.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <span class="font-semibold text-sm line-clamp-1">${escapeHtml(loc.name || 'Unnamed')}</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded font-medium ${
+              loc.city === '重庆' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+            }">${escapeHtml(loc.city || 'N/A')}</span>
+          </div>
+          <div class="flex items-center justify-between text-xs text-slate-400">
+            <span class="bg-slate-800 px-1.5 py-0.5 rounded text-[11px] font-mono border border-slate-700">${escapeHtml(loc.category || 'Uncategorized')}</span>
+            <span class="font-mono text-[10px] opacity-75">${escapeHtml(loc.id)}</span>
+          </div>
+        `;
+
+        locationListEl.appendChild(item);
+      });
+
+      lucide.createIcons();
+    }
+
+    // Load selected location into form
+    function selectLocation(id) {
+      const loc = locations.find(l => l.id === id);
+      if (!loc) return;
+
+      isCreatingNew = false;
+      currentSelectedId = loc.id;
+
+      formTitle.textContent = "Edit Location";
+      badgeCity.textContent = loc.city || "N/A";
+      displayId.textContent = loc.id;
+      saveBtnText.textContent = "Save Location";
+
+      fieldId.value = loc.id;
+      fieldName.value = loc.name || "";
+      fieldCity.value = loc.city || "";
+      fieldCategory.value = loc.category || "";
+      fieldFolder.value = loc.folder || "";
+      fieldAddress.value = loc.address || "";
+      fieldOpTime.value = loc.opTime || "";
+      fieldFee.value = loc.fee || "";
+      fieldLat.value = loc.lat !== undefined ? loc.lat : "";
+      fieldLng.value = loc.lng !== undefined ? loc.lng : "";
+      fieldDesc.value = loc.description || "";
+
+      renderList();
+    }
+
+    // Prepare form for creating a new location
+    function startNewLocation() {
+      isCreatingNew = true;
+      currentSelectedId = null;
+
+      const newId = `loc_${Date.now().toString().slice(-6)}`;
+
+      formTitle.textContent = "Create New Location";
+      badgeCity.textContent = "New";
+      displayId.textContent = newId;
+      saveBtnText.textContent = "Add Location";
+
+      fieldId.value = newId;
+      fieldName.value = "";
+      fieldCity.value = "重庆";
+      fieldCategory.value = "地标";
+      fieldFolder.value = "";
+      fieldAddress.value = "";
+      fieldOpTime.value = "";
+      fieldFee.value = "免费";
+      fieldLat.value = "";
+      fieldLng.value = "";
+      fieldDesc.value = "";
+
+      renderList();
+      fieldName.focus();
+    }
+
+    // Save or Add location logic
+    function handleSave() {
+      const idVal = fieldId.value.trim();
+      const nameVal = fieldName.value.trim();
+
+      if (!idVal || !nameVal) {
+        showToast("Please fill in required fields (ID & Name)", "error");
+        return;
+      }
+
+      const updatedObj = {
+        id: idVal,
+        name: nameVal,
+        city: fieldCity.value.trim(),
+        category: fieldCategory.value.trim(),
+        folder: fieldFolder.value.trim(),
+        address: fieldAddress.value.trim(),
+        opTime: fieldOpTime.value.trim(),
+        fee: fieldFee.value.trim(),
+        lat: fieldLat.value ? parseFloat(fieldLat.value) : null,
+        lng: fieldLng.value ? parseFloat(fieldLng.value) : null,
+        description: fieldDesc.value.trim()
+      };
+
+      if (isCreatingNew) {
+        // Check ID uniqueness
+        if (locations.some(l => l.id === idVal)) {
+          showToast(`Location ID "${idVal}" already exists!`, "error");
+          return;
+        }
+        locations.unshift(updatedObj);
+        isCreatingNew = false;
+        currentSelectedId = idVal;
+        showToast("New location created successfully!", "success");
+      } else {
+        // Check if ID was changed to a duplicate
+        if (idVal !== currentSelectedId && locations.some(l => l.id === idVal)) {
+          showToast(`Location ID "${idVal}" already taken by another entry!`, "error");
+          return;
+        }
+
+        const idx = locations.findIndex(l => l.id === currentSelectedId);
+        if (idx !== -1) {
+          locations[idx] = updatedObj;
+          currentSelectedId = idVal;
+          showToast("Location updated successfully!", "success");
+        }
+      }
+
+      saveData();
+      populateCategoryFilters();
+      selectLocation(currentSelectedId);
+    }
+
+    // Duplicate selected location
+    function handleDuplicate() {
+      if (!currentSelectedId && !isCreatingNew) return;
+      
+      const newId = `${fieldId.value.trim()}_copy_${Math.floor(Math.random()*1000)}`;
+      const duplicated = {
+        id: newId,
+        name: `${fieldName.value.trim()} (Copy)`,
+        city: fieldCity.value.trim(),
+        category: fieldCategory.value.trim(),
+        folder: fieldFolder.value.trim(),
+        address: fieldAddress.value.trim(),
+        opTime: fieldOpTime.value.trim(),
+        fee: fieldFee.value.trim(),
+        lat: fieldLat.value ? parseFloat(fieldLat.value) : null,
+        lng: fieldLng.value ? parseFloat(fieldLng.value) : null,
+        description: fieldDesc.value.trim()
+      };
+
+      locations.unshift(duplicated);
+      saveData();
+      populateCategoryFilters();
+      selectLocation(newId);
+      showToast("Location duplicated successfully!", "info");
+    }
+
+    // Delete selected location
+    function handleDelete() {
+      if (isCreatingNew) {
+        startNewLocation();
+        return;
+      }
+
+      if (!currentSelectedId) return;
+
+      const locName = fieldName.value || currentSelectedId;
+      if (confirm(`Are you sure you want to delete "${locName}"?`)) {
+        locations = locations.filter(l => l.id !== currentSelectedId);
+        saveData();
+        populateCategoryFilters();
+
+        if (locations.length > 0) {
+          selectLocation(locations[0].id);
+        } else {
+          startNewLocation();
+        }
+        showToast("Location deleted.", "warning");
+      }
+    }
+
+    // Export JSON to File & Clipboard
+    function handleExport() {
+      const jsonStr = JSON.stringify(locations, null, 2);
+      
+      // Download File
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `locations_dataset_${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      // Copy to Clipboard fallback/helper
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = jsonStr;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast("Exported JSON downloaded & copied to clipboard!", "success");
+      } catch(e) {
+        showToast("Exported JSON downloaded!", "success");
+      }
+    }
+
+    // Handle Import Execution
+    function executeImport(jsonString) {
+      try {
+        const parsed = JSON.parse(jsonString);
+        if (!Array.isArray(parsed)) {
+          showToast("Invalid JSON: Root must be an array of locations.", "error");
+          return;
+        }
+
+        // Quick field check on first element
+        if (parsed.length > 0 && (!parsed[0].id || !parsed[0].name)) {
+          showToast("Warning: Objects should contain 'id' and 'name' fields.", "warning");
+        }
+
+        locations = parsed;
+        saveData();
+        populateCategoryFilters();
+        if (locations.length > 0) {
+          selectLocation(locations[0].id);
+        } else {
+          startNewLocation();
+        }
+        
+        importModal.classList.add('hidden');
+        importJsonTextarea.value = '';
+        importFileInput.value = '';
+        showToast(`Successfully imported ${locations.length} locations!`, "success");
+      } catch(e) {
+        showToast("Failed to parse JSON string. Please check formatting.", "error");
+      }
+    }
+
+    // Setup All Event Listeners
+    function setupEventListeners() {
+      // Search and Filter Events
+      searchInput.addEventListener('input', (e) => {
+        clearSearchBtn.classList.toggle('hidden', !e.target.value);
+        renderList();
+      });
+
+      clearSearchBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        clearSearchBtn.classList.add('hidden');
+        renderList();
+      });
+
+      cityFilter.addEventListener('change', renderList);
+      categoryFilter.addEventListener('change', renderList);
+
+      // Form Action Events
+      saveBtn.addEventListener('click', handleSave);
+      duplicateBtn.addEventListener('click', handleDuplicate);
+      deleteBtn.addEventListener('click', handleDelete);
+      addNewBtn.addEventListener('click', startNewLocation);
+
+      // Dynamic Badge updates
+      fieldCity.addEventListener('input', (e) => {
+        badgeCity.textContent = e.target.value.trim() || "N/A";
+      });
+
+      // Export / Reset Data
+      exportBtn.addEventListener('click', handleExport);
+      resetDataBtn.addEventListener('click', () => {
+        if (confirm("Reset to the default 60 Chongqing & Chengdu locations? Any unsaved edits will be lost.")) {
+          locations = [...INITIAL_LOCATIONS];
+          saveData();
+          populateCategoryFilters();
+          selectLocation(locations[0].id);
+          showToast("Reset to default dataset.", "info");
+        }
+      });
+
+      // Import Modal Events
+      importBtn.addEventListener('click', () => importModal.classList.remove('hidden'));
+      closeModal.addEventListener('click', () => importModal.classList.add('hidden'));
+      cancelImport.addEventListener('click', () => importModal.classList.add('hidden'));
+
+      confirmImport.addEventListener('click', () => {
+        const textVal = importJsonTextarea.value.trim();
+        if (textVal) {
+          executeImport(textVal);
+        } else if (importFileInput.files.length > 0) {
+          const file = importFileInput.files[0];
+          const reader = new FileReader();
+          reader.onload = (e) => executeImport(e.target.result);
+          reader.readAsText(file);
+        } else {
+          showToast("Please paste JSON text or select a JSON file.", "warning");
+        }
+      });
+    }
+
+    // Toast Notification System
+    function showToast(message, type = "info") {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+
+      const bgMap = {
+        success: "bg-emerald-600 border-emerald-500 text-white",
+        error: "bg-rose-600 border-rose-500 text-white",
+        warning: "bg-amber-600 border-amber-500 text-white",
+        info: "bg-indigo-600 border-indigo-500 text-white"
+      };
+
+      const iconMap = {
+        success: "check-circle",
+        error: "alert-circle",
+        warning: "alert-triangle",
+        info: "info"
+      };
+
+      toast.className = `flex items-center gap-2.5 px-4 py-3 rounded-lg border shadow-xl text-xs font-medium transform transition-all duration-300 opacity-0 translate-y-2 ${bgMap[type] || bgMap.info}`;
+      toast.innerHTML = `
+        <i data-lucide="${iconMap[type]}" class="w-4 h-4 shrink-0"></i>
+        <span>${escapeHtml(message)}</span>
+      `;
+
+      container.appendChild(toast);
+      lucide.createIcons();
+
+      // Trigger animation
+      setTimeout(() => {
+        toast.classList.remove('opacity-0', 'translate-y-2');
+      }, 10);
+
+      // Auto remove
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // Utility: HTML Escaper
+    function escapeHtml(str) {
+      if (typeof str !== 'string') return str;
+      return str.replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+    }
+
+    // Run on Window Load
+    window.onload = init;
+  </script>
+</body>
+</html>
